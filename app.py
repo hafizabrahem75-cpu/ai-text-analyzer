@@ -8,7 +8,7 @@ st.set_page_config(page_title="منصة حافظ السراء")
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     # التغيير الجوهري هنا: نستخدم gemini-pro
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel(gemini-1.5-flash-latest')
 except Exception as e:
     st.error("خطأ في المفتاح.")
     st.stop()
