@@ -1,13 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
-import requests
+import urllib.parse
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="منصة حافظ السراء للذكاء الاصطناعي", page_icon="🧠", layout="centered")
 
-# الواجهة الرئيسية المنسقة في الأعلى
-st.title("🧠 منصة حافظ السراء للذكاء الاصطناعي الشامل")
-st.write("مساعدك الذكي الشامل: اسألني أي سؤال أو اطلب مني رسم وتوليد أي صورة وسأجيبك فوراً!")
+# العنوان الرئيسي المنسق والمصغر على شاشات الجوال
+st.markdown("<h2 style='text-align: center; color: white; font-size: 24px; font-weight: bold;'>🧠 منصة حافظ السراء للذكاء الاصطناعي الشامل</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #aaa; font-size: 14px;'>مساعدك الذكي: اسألني أي سؤال أو اطلب مني رسم وتوليد أي صورة فوراً!</p>", unsafe_allow_html=True)
 
 # ربط النظام بالمفتاح السري تلقائياً من السيرفر
 try:
@@ -32,7 +32,7 @@ for message in st.session_state.messages:
             st.image(message["image"])
 
 # صندوق إدخال الأسئلة والأوامر في الأسفل
-user_query = st.chat_input("اسألني عن أي شيء، أو اطلب صورة (مثال: ارسم لي جبل تحت الثلج)...")
+user_query = st.chat_input("اسألني عن أي شيء، أو اطلب صورة...")
 
 if user_query:
     with st.chat_message("user"):
@@ -42,29 +42,42 @@ if user_query:
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         
-        # التحقق مما إذا كان المستخدم يطلب صورة
-        is_image_request = any(keyword in user_query for keyword in ["ارسم", "صورة", "صمم", "توليد", "draw", "image", "picture"])
+        # تنظيف النص البرمجي للبحث عن التحيات أو الرسوم
+        clean_query = user_query.strip()
         
-        if is_image_request:
+        # 1. الرد المباشر الذكي على التحيات اليومية دون الحاجة للسيرفر الخارجي
+        if clean_query in ["السلام عليكم", "سلام عليكم", "السلام عليكم ورحمة الله", "سلام"]:
+            answer = "وعليكم السلام ورحمة الله وبركاته! أهلاً بك، كيف يمكنني مساعدتك اليوم؟"
+            message_placeholder.markdown(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})
+            
+        elif clean_query in ["هاي", "هلو", "hello", "hi"]:
+            answer = "أهلاً بك! اسألني عن أي شيء وسأجيبك فوراً."
+            message_placeholder.markdown(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})
+            
+        # 2. معالجة طلبات الصور
+        elif any(keyword in clean_query for keyword in ["ارسم", "صورة", "صمم", "توليد", "رسمة"]):
             message_placeholder.markdown("🎨 جاري تخيل ورسم الصورة فوراً...")
             try:
-                # استخدام محرك رسومات خارجي وسريع ومفتوح لإنشاء الصور بموقعك
-                image_url = f"https://pollinations.ai/p/{requests.utils.quote(user_query)}?width=600&height=400&enhanced=true"
+                encoded_prompt = urllib.parse.quote(clean_query)
+                image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true"
                 st.image(image_url)
                 st.session_state.messages.append({"role": "assistant", "content": f"ها هي الصورة التي طلبتها لـ: {user_query}", "image": image_url})
                 message_placeholder.empty()
             except Exception:
-                message_placeholder.markdown("عذراً، واجه محرك الصور ضغطاً مؤقتاً، يرجى المحاولة مرة أخرى.")
+                message_placeholder.markdown("عذراً، واجه محرك الصور ضغطاً مؤقتاً، يرجى إعادة المحاولة.")
+                
+        # 3. معالجة الأسئلة العامة عبر الذكاء الاصطناعي
         else:
             message_placeholder.markdown("🧠 جاري التفكير والكتابة...")
             if has_api:
                 try:
-                    full_prompt = f"أجب على السؤال التالي مباشرة باللغة العربية وبدون مقدمات أو جمل ترحيبية: {user_query}"
+                    full_prompt = f"أجب على السؤال التالي مباشرة باللغة العربية وبدون مقدمات أو جمل ترحيبية أو تكرار للسؤال: {clean_query}"
                     response = model.generate_content(full_prompt)
                     answer = response.text
                 except Exception:
-                    # رد بديل ذكي ومباشر في حال واجهت الشبكة أي قيود إقليمية مؤقتة
-                    answer = f"تم استلام سؤالك بدقة: '{user_query}'. أنا هنا مبرمج ومستعد لمساعدتك في كافة الأمور التقنية والعلمية فوراً وبشكل مباشر!"
+                    answer = "أنا جاهز للإجابة على كافة أسئلتك البرمجية والعلمية بدقة، يرجى إعادة كتابة السؤال."
             else:
                 answer = "⚙️ النظام بانتظار تفعيل المفتاح السري تلقائياً من الإعدادات (Secrets) للبدء."
             
@@ -72,8 +85,8 @@ if user_query:
             st.session_state.messages.append({"role": "assistant", "content": answer})
 
 
-# --- الترتيب الاحترافي النهائي: معلومات المطور ثابتة ومستقرة في الأسفل تماماً ---
-st.markdown("<br><br><br><br><hr style='border:0.5px solid #222;'>", unsafe_allow_html=True)
+# --- الترتيب الثابت والمستقر في الأسفل تماماً (تذييل الصفحة) ---
+st.markdown("<br><br><hr style='border:0.5px solid #222;'>", unsafe_allow_html=True)
 
 # أزرار تواصل علنية بحجم متوسط وأنيق في سطر واحد
 st.markdown(
