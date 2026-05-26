@@ -5,16 +5,22 @@ import google.generativeai as genai
 st.set_page_config(page_title="ذكاء حافظ السراء الاصطناعي", page_icon="🧠", layout="centered")
 
 st.title("🧠 منصة حافظ السراء للذكاء الاصطناعي")
-st.write("مرحباً بك! أنا مساعدك الذكي الشامل، اسألني في أي شيء وسأجيبك فوراً وبشكل مباشر.")
+st.write("اسألني في أي شيء، وسأجيبك فوراً وبشكل مباشر دون مقدمات.")
 
-# اطلب مفتاح الـ API من المستخدم بشكل آمن لكي يعمل عقل البرنامج
-# (يمكنك الحصول عليه مجاناً من Google AI Studio)
-gemini_key = st.sidebar.text_input("أدخل مفتاح Google API Key الخاص بك:", type="password")
+# جلب المفتاح تلقائياً من إعدادات السيرفر المخفية
+try:
+    GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+    genai.configure(api_key=GOOGLE_API_KEY)
+    model = genai.GenerativeModel('gemini-pro')
+    has_api = True
+except Exception:
+    has_api = False
 
+# الذاكرة لتخزين المحادثة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# عرض المحادثة
+# عرض المحادثة في منتصف الشاشة
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -31,32 +37,33 @@ if user_query:
         message_placeholder = st.empty()
         message_placeholder.markdown("🧠 جاري التفكير والكتابة...")
         
-        if gemini_key:
+        if has_api:
             try:
-                # تشغيل عقل جيميناي الحقيقي للإجابة المباشرة والتلقائية
-                genai.configure(api_key=gemini_key)
-                model = genai.GenerativeModel('gemini-pro')
-                
-                # إرسال السؤال مع توجيه صارم بالرد المباشر بالعربية
-                full_prompt = f"أجب على السؤال التالي مباشرة بدون أي مقدمات ترحيبية وباللغة العربية الفصحى: {user_query}"
+                full_prompt = f"أجب على السؤال التالي مباشرة باللغة العربية الفصحى وبدون أي عبارات ترحيبية أو مقدمات: {user_query}"
                 response = model.generate_content(full_prompt)
                 answer = response.text
-            except Exception as e:
-                answer = "حدث خطأ أثناء الاتصال بعقل الذكاء الاصطناعي، يرجى التأكد من صلاحية المفتاح."
+            except Exception:
+                answer = "عذراً، واجه السيرفر مشكلة أثناء معالجة النص، يرجى المحاولة مرة أخرى."
         else:
-            answer = "⚙️ فضلاً يا صديقي، لكي أتمكن من إجابتك تلقائياً وبذكاء كامل مثلي، قم بإنشاء مفتاح مجاني من (Google AI Studio) وضعه في الصندوق الجانبي ليعمل الموقع فوراً!"
+            answer = "⚙️ التطبيق بانتظار تفعيل مفتاح الـ API من إعدادات السيرفر (Secrets)."
 
         message_placeholder.markdown(answer)
     st.session_state.messages.append({"role": "assistant", "content": answer})
 
-# --- الترتيب النظيف في أسفل الصفحة تماماً ---
-st.markdown("<br><br><hr>", unsafe_allow_html=True)
-with st.expander("ℹ️ معلومات المطور وحقوق الملكية"):
-    st.markdown("<h3 style='text-align: center; color: #4CAF50;'>تم تطوير هذا الروبوت بواسطة المهندس: حافظ السراء</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: gray;'>جميع الحقوق محفوظة © 2026</p>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("<p style='text-align: center;'><a href='https://wa.me/967717245252' target='_blank' style='background-color: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: block;'>💬 راسلنا عبر الواتساب</a></p>", unsafe_allow_html=True)
-    with col2:
-        st.markdown("<p style='text-align: center;'><a href='https://www.facebook.com/share/1CgpiG9TYR/' target='_blank' style='background-color: #1877F2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: block;'>🔗 تابعنا على فيسبوك</a></p>", unsafe_allow_html=True)
+
+# --- التعديل الجديد: أزرار تواصل متوسطة واسمك بخط صغير في الأسفل تماماً ---
+st.markdown("<br><br><hr style='border:0.5px solid #333;'>", unsafe_allow_html=True)
+
+# الأزرار في سطر واحد وبحجم متوسط وأنيق
+st.markdown(
+    """
+    <div style="text-align: center; margin-bottom: 10px;">
+        <a href="https://wa.me/967717245252" target="_blank" style="background-color: #25D366; color: white; padding: 6px 14px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; margin: 5px; display: inline-block;">💬 واتساب</a>
+        <a href="https://www.facebook.com/share/1CgpiG9TYR/" target="_blank" style="background-color: #1877F2; color: white; padding: 6px 14px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; margin: 5px; display: inline-block;">🔗 فيسبوك</a>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+
+# اسمك بخط صغير جداً وواضح للقراءة
+st.markdown("<p style='text-align: center; color: #888888; font-size: 12px; margin-top: 0px;'>تم تطوير هذا الروبوت بواسطة المهندس: حافظ السراء © 2026</p>", unsafe_allow_html=True)
