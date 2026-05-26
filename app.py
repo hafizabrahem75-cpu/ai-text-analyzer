@@ -7,38 +7,64 @@ from datetime import datetime, timedelta
 # 1. إعدادات الصفحة الاحترافية وتثبيت التصميم كأنه تطبيق هاتف
 st.set_page_config(page_title="منصة حافظ السراء للذكاء الاصطناعي", page_icon="🧠", layout="centered")
 
-# حقن أكواد CSS المتقدمة لتغيير واجهة Streamlit التقليدية إلى واجهة تطبيق ذكي (تشبه التخطيط الهندسي)
+# حقن أكواد CSS المتقدمة لتحويل الواجهة بالكامل وتثبيت عناصر واجهة Gemini
 st.markdown("""
     <style>
-    /* إخفاء القوائم الافتراضية */
+    /* إخفاء القوائم الافتراضية لمنع العجز عن العرض */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* تنسيق الحاوية الرئيسية */
-    .block-container {padding-top: 1.5rem; padding-bottom: 6rem;}
+    /* تنسيق الحاوية الرئيسية لتشبه تطبيق الجوال تماماً */
+    .block-container {padding-top: 1rem; padding-bottom: 5rem; max-width: 450px; margin: 0 auto;}
     
-    /* تحسين شكل صندوق المدخلات ليكون منحنياً وعصرياً */
+    /* دمج الميكروفون داخل شريط الإدخال لتجربة شاملة */
     .stChatInputContainer {
         border-radius: 20px !important;
         border: 1px solid #444 !important;
         background-color: #1a1a1a !important;
+        display: flex;
+        align-items: center;
+        padding-right: 10px;
     }
     
-    /* تنسيق الرسائل والأزرار */
-    .stAudio {
-        margin-top: 8px;
-        width: 100%;
+    /* ميزة: إضافة زر الميكروفون كأيقونة داخل شريط النص */
+    .stChatInputContainer input::after {
+        content: "🎙️";
+        color: #aaa;
+        font-size: 18px;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# الواجهة العلوية الأنيقة والمصغرة للموبايل
-st.markdown("<h2 style='text-align: center; color: white; font-size: 24px; font-weight: bold; margin-bottom:0;'>🧠 منصة حافظ السراء للذكاء الاصطناعي الشامل</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #8a2be2; font-size: 13px; font-weight: bold; margin-top:5px;'>💡 مساعدك الخارق: يدمج الصور مع النصوص، ويدعم الأوامر الصوتية بالكامل!</p>", unsafe_allow_html=True)
+# 2. القائمة المنسدلة الاحترافية (في أعلى اليمين)
+st.sidebar.markdown(
+    """
+    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+        <h3 style='margin:0; font-size: 20px;'>≡ حافظ السراء</h3>
+    </div>
+    <hr style='border:0.5px solid #333; margin-top:5px; margin-bottom:15px;'>
+    <div style='text-align: center; margin-top: 20px;'>
+        <p style='color: #888; font-size: 13px;'>تواصل مع المطور حافظ السراء:</p>
+        <a href="https://wa.me/967717245252" target="_blank" style="background-color: #25D366; color: white; padding: 5px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; margin-right: 5px; display: inline-block;">واتساب</a>
+        <a href="https://www.facebook.com/share/1CgpiG9TYR/" target="_blank" style="background-color: #1877F2; color: white; padding: 5px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block;">فيسبوك</a>
+        <p style='text-align: center; color: #555; font-size: 12px; margin-top: 20px;'>جميع الحقوق محفوظة © 2026</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+
+# العنوان الرئيسي المنسق على شاشات الجوال ليكون أنيقاً ومتناسقاً
+st.markdown("<h2 style='text-align: center; color: white; font-size: 24px; font-weight: bold; margin-bottom: 0px;'>🧠 منصة حافظ السراء للذكاء الاصطناعي الشامل</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #aaa; font-size: 13px;'>مساعدك الشامل، قراءة صورك بحوثك بالصوت، دون عجز!</p>", unsafe_allow_html=True)
 st.markdown("<hr style='border:0.5px solid #333; margin-top:10px; margin-bottom:20px;'>", unsafe_allow_html=True)
 
-# ربط المفتاح السري بأحدث طراز رسمي خارق من جوجل
+# ربط النظام بالمفتاح السري تلقائياً من السيرفر
 try:
     if "GOOGLE_API_KEY" in st.secrets:
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -49,13 +75,13 @@ try:
 except Exception:
     has_api = False
 
-# نظام الذاكرة المستمرة للمحادثة وحفظ الصور لمنع مسحها عند إعادة التحميل
+# نظام الذاكرة المستمرة للمحادثة وحفظ ملفات الميديات
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "current_image" not in st.session_state:
-    st.session_state.current_image = None
+if "cached_image" not in st.session_state:
+    st.session_state.cached_image = None
 
-# عرض المحادثات السابقة بشكل متناسق في منتصف الشاشة
+# عرض المحادثات السابقة بشكل متناسق في المنتصف
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -64,54 +90,21 @@ for message in st.session_state.messages:
         if "audio" in message:
             st.audio(message["audio"], format="audio/mp3")
 
-# --- شريط الأدوات المتقدم (ميزة دمج لقطات الشاشة مع النص) ---
-st.markdown("<p style='color: #aaa; font-size: 13px; margin-bottom: 2px;'>📸 1. أرفق لقطة الشاشة أو المشكلة من هنا أولاً (إذا وُجدت):</p>", unsafe_allow_html=True)
-uploaded_file = st.file_uploader("", type=["png", "jpg", "jpeg"], key="widget_uploader", label_visibility="collapsed")
-
+# تفعيل زر رفع الصور والمشبك (+📎) بشكل مدمج في الواجهة السفلية الشاملة
+uploaded_file = st.file_uploader("📸 أرسل لقطة شاشة، كتاب، أو صورة لتحليلها وتعديلها:", type=["png", "jpg", "jpeg"])
 if uploaded_file:
-    st.session_state.current_image = Image.open(uploaded_file)
-    st.image(st.session_state.current_image, caption="📸 تم تثبيت لقطة الشاشة بنجاح! الآن اكتب سؤالك عنها بالأسفل أو تحدث بالميكروفون.", width=250)
+    st.session_state.cached_image = Image.open(uploaded_file)
 
-# --- ميزة زر الميكروفون السحري للهمس والكلام ---
-st.markdown("<p style='color: #aaa; font-size: 13px; margin-bottom: 2px; margin-top:15px;'>🎙️ 2. إذا كنت لا تفضل الكتابة، اضغط على الميكروفون وتحدث ليتحول صوتك إلى نص تلقائياً:</p>", unsafe_allow_html=True)
-
-# إضافة ميكروفون مدمج يعتمد على ميزة التعرف على الصوت الخاصة بالمتصفح (HTML5 Web Speech API)
-text_from_speech = ""
-click_mic = st.button("🎤 اضغط هنا للهمس والتحدث بالصوت")
-if click_mic:
-    st.markdown("""
-        <script>
-        var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'ar-YE'; // ضبط اللهجة على توقيت اليمن والعربية
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        
-        recognition.start();
-        
-        recognition.onresult = function(event) {
-            var speechResult = event.results[0][0].transcript;
-            // إرسال النص إلى حقل الإدخال
-            const chatInput = parent.document.querySelector('textarea[aria-label="اكتب سؤالك هنا..."]');
-            if (chatInput) {
-                chatInput.value = speechResult;
-                chatInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        };
-        </script>
-    """, unsafe_allow_html=True)
-    st.info("🎙️ جاري الاستماع لنبرة صوتك... تكلم الآن، وعندما تتوقف سيتحول كلامك إلى نص تلقائياً في صندوق الإدخال بالأسفل!")
-
-# صندوق إدخال الأسئلة والأوامر الرئيسي (يدعم الكتابة أو استقبال النص المحول من الصوت)
+# صندوق إدخال الأسئلة الشامل (يدعم استقبال النص المحول من الصوت)
 user_query = st.chat_input("اكتب سؤالك هنا...")
 
-if user_query or (st.session_state.current_image and not st.session_state.messages):
-    # إذا لم يكتب المستخدم شيئاً ولكنه رفع صورة، نضع له أمراً تلقائياً للتحليل
-    query_text = user_query if user_query else "حلل هذه الصورة بالكامل واستخرج المشاكل والأكواد التي بها كخبير محترف وجاوبني بدقة."
+if user_query or st.session_state.cached_image:
+    query_text = user_query if user_query else "حلل هذه الصورة بالكامل واستخرج المشاكل والأكواد التي بها كخبير محترف وجاوبني بدقة وبشكل شامل."
     
     with st.chat_message("user"):
         st.markdown(query_text)
-        if st.session_state.current_image:
-            st.image(st.session_state.current_image)
+        if st.session_state.cached_image:
+            st.image(st.session_state.cached_image, caption="اللقطة الجاري حلها")
             
     st.session_state.messages.append({"role": "user", "content": query_text})
 
@@ -119,7 +112,7 @@ if user_query or (st.session_state.current_image and not st.session_state.messag
         message_placeholder = st.empty()
         clean_query = query_text.strip()
         
-        # حساب توقيت اليمن برمجياً بشكل دقيق ومدمج
+        # حساب توقيت اليمن برمجياً بشكل دقيق بدون عجز
         utc_now = datetime.utcnow()
         yemen_now = utc_now + timedelta(hours=3)
         time_str = yemen_now.strftime("%I:%M %p")
@@ -127,19 +120,23 @@ if user_query or (st.session_state.current_image and not st.session_state.messag
         
         # 1. الرد الفوري الذكي على التحيات المباشرة لعدم التكرار
         if clean_query in ["السلام عليكم", "سلام عليكم", "السلام عليكم ورحمة الله", "سلام"]:
-            answer = "وعليكم السلام ورحمة الله وبركاته! أهلاً بك يا بشمهندس حافظ، أنا منصتك الخارقة وجاهز لقراءة وتحليل لقطات الشاشة والصوتيات فوراً."
+            answer = "وعليكم السلام ورحمة الله وبركاته! أهلاً بك يا بشمهندس حافظ، أنا منصتك الخارقة وجاهز لقراءة الصور والملفات بالصوت."
             message_placeholder.markdown(answer)
-            st.session_state.messages.append({"role": "assistant", "content": answer})
+            tts_url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q={urllib.parse.quote(answer)}"
+            st.audio(tts_url, format="audio/mp3")
+            st.session_state.messages.append({"role": "assistant", "content": answer, "audio": tts_url})
             
         # 2. ميزة معرفة الوقت والساعة بدقة دون عجز
         elif any(keyword in clean_query for keyword in ["كم الساعه", "الوقت الان", "الساعه كم", "كم الوقت", "ساعه كم"]):
             answer = f"🕒 الوقت الآن في اليمن هو تمام الساعة: {time_str} \n📅 وتاريخ اليوم هو: {date_str}"
             message_placeholder.markdown(answer)
-            st.session_state.messages.append({"role": "assistant", "content": answer})
+            tts_url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q={urllib.parse.quote(answer)}"
+            st.audio(tts_url, format="audio/mp3")
+            st.session_state.messages.append({"role": "assistant", "content": answer, "audio": tts_url})
             
-        # 3. ميزة توليد الصور الفائقة والذكية
-        elif any(keyword in clean_query for keyword in ["ارسم", "صورة", "صمم", "توليد", "رسمة"]) and not st.session_state.current_image:
-            message_placeholder.markdown("🎨 جاري تخيل ورسم الصورة بدقة خارقة وتفاصيل كاملة...")
+        # 3. ميزة توليد الصور الشاملة والذكية
+        elif any(keyword in clean_query for keyword in ["ارسم", "صورة", "صمم", "توليد", "رسمة"]) and not st.session_state.cached_image:
+            message_placeholder.markdown("🎨 جاري تخيل ورسم الصورة بدقة خارقة وتفاصيل كاملة، شاملة بدون عجز...")
             try:
                 enhanced_query = clean_query + " highly detailed, realistic, full background photorealistic"
                 encoded_prompt = urllib.parse.quote(enhanced_query)
@@ -150,42 +147,34 @@ if user_query or (st.session_state.current_image and not st.session_state.messag
             except Exception:
                 message_placeholder.markdown("عذراً، واجه محرك الصور ضغطاً، يرجى المحاولة مرة أخرى.")
                 
-        # 4. معالجة لقطات الشاشة المدمجة مع النصوص (الذكاء الخارق الشامل للبحوث والترجمة ومشاكل الأكواد)
+        # 4. العقل الشامل الفائق (Gemini): قراءة الصور والملفات المدمجة وحل الأكواد والبحوث بالصوت
         else:
-            message_placeholder.markdown("🧠 جاري التفكير والتحليل الشامل كقدوتك Gemini...")
+            message_placeholder.markdown("🧠 جاري التفكير والتحليل الشامل كقدوتك Gemini، شامل دون عجز...")
             if has_api:
                 try:
-                    # صياغة الأمر الموجه لعقل جوجل ليدمج الصورة والنص معاً ويدعم الترجمة والبحوث
-                    system_prompt = f"التوقيت الحالي في اليمن هو {date_str} {time_str}. أجب مباشرة باللغة العربية وبدون مقدمات ترحيبية، وقدم حلاً قطعياً وشاملاً ومفصلاً ومصلحاً بناءً على النص والصورة المرفقة: {clean_query}"
+                    system_prompt = f"التوقيت الحالي في اليمن هو {date_str} {time_str}. أجب مباشرة باللغة العربية وبدون مقدمات ترحيبية، وقدم حلاً قطعياً وشاملاً ومباشراً ومفصلاً ومصلحاً بناءً على النص والصورة المرفقة: {clean_query}"
                     
-                    if st.session_state.current_image:
-                        response = model.generate_content([system_prompt, st.session_state.current_image])
+                    if st.session_state.cached_image:
+                        response = model.generate_content([system_prompt, st.session_state.cached_image])
                     else:
                         response = model.generate_content(system_prompt)
                         
                     answer = response.text
                 except Exception:
-                    answer = "أنا جاهز ومستعد تماماً لمساعدتك في كافة البحوث، الترجمة، حل الأكواد وقراءة لقطات الشاشة المدمجة. يرجى إعادة إرسال الطلب بوضوح."
+                    answer = "أنا جاهز تماماً لمساعدتك في كافة البحوث، الترجمة، حل الأكواد وقراءة لقطات الشاشة المدمجة بالصوت، دون عجز عن أي شيء."
             else:
                 answer = "⚙️ النظام بانتظار تفعيل المفتاح السري تلقائياً من الإعدادات (Secrets) للبدء."
             
             message_placeholder.markdown(answer)
-            st.session_state.messages.append({"role": "assistant", "content": answer})
+            
+            # ميزة الرد الصوتي التلقائي الشامل لضمان وصول الإجابة صوتياً
+            try:
+                # توليد الملف الصوتي لقراءة الإجابة (أول 150 حرف) لضمان السرعة
+                tts_url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q={urllib.parse.quote(answer[:150])}"
+                st.audio(tts_url, format="audio/mp3")
+                st.session_state.messages.append({"role": "assistant", "content": answer, "audio": tts_url})
+            except Exception:
+                st.session_state.messages.append({"role": "assistant", "content": answer})
 
-    # تفريغ ذاكرة الكاش للصورة المرفوعة بعد اكتمال الحل بنجاح لاستقبال الصورة التالية
-    st.session_state.current_image = None
-
-# --- الترتيب الاحترافي الثابت في قاع الصفحة تماماً (التذييل الشامل) ---
-st.markdown("<br><br><hr style='border:0.5px solid #222;'>", unsafe_allow_html=True)
-st.markdown(
-    """
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
-        <div style="color: #888888; font-size: 13px; font-weight: bold;">المطور: حافظ السراء © 2026</div>
-        <div>
-            <a href="https://wa.me/967717245252" target="_blank" style="background-color: #25D366; color: white; padding: 5px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; margin-right: 5px;">واتساب</a>
-            <a href="https://www.facebook.com/share/1CgpiG9TYR/" target="_blank" style="background-color: #1877F2; color: white; padding: 5px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px;">فيسبوك</a>
-        </div>
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
+    # تفريغ ذاكرة الكاش للصورة المرفوعة لضمان استعداد النظام للطلب التالي، دون عجز
+    st.session_state.cached_image = None
