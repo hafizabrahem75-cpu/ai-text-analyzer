@@ -7,10 +7,10 @@ st.set_page_config(page_title="منصة حافظ السراء", layout="centered
 # إعداد المفتاح والنموذج
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    # استخدام هذا النموذج الأكثر استقراراً في أغلب الحسابات
+    # استخدام النموذج المحدث والمستقر
     model = genai.GenerativeModel('gemini-1.5-flash')
-except Exception:
-    st.error("خطأ في المفتاح، تأكد من الـ Secrets.")
+except Exception as e:
+    st.error("تأكد من إعداد المفتاح في الـ Secrets.")
     st.stop()
 
 # 1. الشريط الجانبي (القائمة المنسدلة والحسابات)
@@ -26,8 +26,7 @@ st.title("🧠 منصة حافظ السراء")
 # أزرار تحكم إضافية (رفع ملفات + ميكروفون)
 col1, col2 = st.columns([1, 5])
 with col1:
-    if st.button("🎤"):
-        st.write("الميكروفون مفعل...")
+    st.button("🎤") # زر الميكروفون
 with col2:
     uploaded_file = st.file_uploader("رفع صورة", type=['png', 'jpg'], label_visibility="collapsed")
 
@@ -47,10 +46,11 @@ if prompt := st.chat_input("اسأل Gemini..."):
 
     with st.chat_message("assistant"):
         try:
-            # دمج الملف المرفوع إذا وجد
-            content_to_send = prompt
-            response = model.generate_content(content_to_send)
+            # معالجة الرد
+            response = model.generate_content(prompt)
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error(f"خطأ: {e}")
+            # إذا ظهر خطأ، سنعرض رسالة توضيحية
+            st.error("حدث خطأ في الاتصال بالنموذج. تأكد من تفعيل Gemini API في حسابك.")
+            st.write(e)
