@@ -1,26 +1,26 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعداد الصفحة
+# إعداد الصفحة
 st.set_page_config(page_title="منصة حافظ السراء", layout="centered")
 
-# 2. إعداد المفتاح والنموذج
+# إعداد المفتاح والنموذج
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    # التغيير هنا: استخدام نموذج gemini-1.0-pro لضمان توافقه مع حسابك
-    model = genai.GenerativeModel('gemini-1.0-pro')
+    # هذا هو النموذج الذي نستخدمه الآن في الكود
+    model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
     st.error("خطأ في إعداد المفتاح.")
     st.stop()
 
-# 3. الشريط الجانبي
+# الشريط الجانبي
 with st.sidebar:
     st.title("⚙️ الإعدادات")
     st.selectbox("حساباتي:", ["الحساب الرئيسي", "حساب العمل", "الحساب الشخصي"])
     st.markdown("---")
     st.write("منصة حافظ السراء - نسخة 2.0")
 
-# 4. الواجهة الرئيسية
+# الواجهة الرئيسية
 st.title("🧠 منصة حافظ السراء")
 
 # أزرار تحكم
@@ -30,7 +30,7 @@ with col1:
 with col2:
     st.file_uploader("رفع صورة", type=['png', 'jpg'], label_visibility="collapsed")
 
-# 5. عرض المحادثة
+# عرض المحادثة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -38,7 +38,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 6. صندوق الإدخال
+# صندوق الإدخال
 if prompt := st.chat_input("اسأل Gemini..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -50,5 +50,5 @@ if prompt := st.chat_input("اسأل Gemini..."):
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error("خطأ: تأكد من تفعيل خدمة Gemini API في حسابك على Google AI Studio.")
+            st.error("حدث خطأ في الاتصال.")
             st.write(f"التفاصيل: {e}")
