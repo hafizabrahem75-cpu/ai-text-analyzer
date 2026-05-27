@@ -1,42 +1,43 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعداد واجهة الصفحة
-st.set_page_config(page_title="منصة حافظ السراء", page_icon="🧠")
+# 1. إعداد الصفحة
+st.set_page_config(page_title="منصة حافظ السراء")
 
-# 2. إعداد الاتصال بـ Gemini
+# 2. إعداد الاتصال
 try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    # استخدام النموذج الأكثر توافقاً حالياً
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # التأكد من وجود المفتاح
+    api_key = st.secrets["GOOGLE_API_KEY"]
+    genai.configure(api_key=api_key)
+    
+    # محاولة الاتصال بنموذج gemini-pro (النموذج الأكثر استقراراً)
+    model = genai.GenerativeModel('gemini-pro')
 except Exception as e:
-    st.error(f"خطأ في إعداد المفتاح: {e}")
+    st.error("خطأ في التهيئة. تأكد من إعداد المفتاح في الـ Secrets.")
     st.stop()
 
-# 3. الواجهة الأساسية
 st.title("🧠 منصة حافظ السراء")
 
-# ذاكرة المحادثة (لحفظ الرسائل)
+# 3. ذاكرة المحادثة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# عرض الرسائل السابقة
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 4. صندوق الإدخال (المحادثة)
+# 4. منطقة الإدخال
 if prompt := st.chat_input("اسأل Gemini..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # توليد الإجابة
     with st.chat_message("assistant"):
         try:
+            # هنا التغيير: نستخدم generate_content المباشر
             response = model.generate_content(prompt)
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error("تعذر الاتصال بـ Gemini. يرجى التأكد من تفعيل API Key في Google AI Studio.")
-            st.write(f"تفاصيل الخطأ التقني: {e}")
+            st.error("تعذر الاتصال بـ Gemini. هذا الخطأ يعني أن المفتاح لا يملك صلاحية الوصول للنموذج.")
+            st.write(f"التفاصيل: {e}")
