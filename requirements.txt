@@ -1,1 +1,2 @@
-requirements.txt
+google-generativeai>=0.7.0
+streamlit
