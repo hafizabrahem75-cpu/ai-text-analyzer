@@ -1,15 +1,16 @@
 import streamlit as st
 import google.generativeai as genai
 
-st.set_page_config(page_title="منصة حافظ السراء", page_icon="🧠")
+st.set_page_config(page_title="منصة حافظ السراء")
 
-# إعداد المفتاح بشكل مباشر وآمن
 try:
+    # إعداد المفتاح
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    # استخدام الإصدار الأحدث من النموذج
+    
+    # محاولة استخدام الإصدار الأحدث
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
-    st.error("تأكد من إعداد المفتاح في الـ Secrets")
+    st.error("خطأ في الاتصال، حاول لاحقاً.")
     st.stop()
 
 st.title("🧠 منصة حافظ السراء")
@@ -32,5 +33,5 @@ if prompt := st.chat_input("اسأل Gemini..."):
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error("حدث خطأ في الاتصال.")
-            st.write(str(e))
+            st.error("تعذر الوصول للنموذج. جرب نموذجاً آخر.")
+            st.write(f"خطأ تقني: {e}")
